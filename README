@@ -1,0 +1,5 @@
+Find dependencies here: http://drupal.org/project/opentok
+
+you will need to download and istall the libraries drupal module.
+after doing so create a /sites/all/libraries directory, and put jquery.opentok and json-js plugins there in folders named "jquery.opentok" and "json-js"
+only after doing so you can enable the opentok module.
