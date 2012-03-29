@@ -161,6 +161,14 @@ function _opentok_installed_fields() {
         'max_length' => 20,
       ),
     ),
+    'opentok_participants' => array(
+      'field_name'  => 'opentok_participants',
+      'cardinality' => 1,
+      'type'        => 'text',
+      'settings'    => array(
+        'max_length' => 10000,
+      ),
+    ),
   );
 }
 
@@ -195,6 +203,14 @@ function _opentok_installed_instances() {
     'opentok_conference_time' => array(
       'field_name'  => 'opentok_conference_time',
       'label' => $t('The time of the conference (please also include the time zone)'),
+      'type'        => 'text',
+      'widget'      => array(
+        'type'    => 'text_textfield',
+      ),
+    ),
+    'opentok_participants' => array(
+      'field_name'  => 'opentok_participants',
+      'label' => $t('The Conference Participants'),
       'type'        => 'text',
       'widget'      => array(
         'type'    => 'text_textfield',

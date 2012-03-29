@@ -637,3 +637,117 @@ function theme_opentok_push_talk_toggle($element) {
 function theme_opentok_snapshot_publisher($element) {
   return l(t('Snapshot'), '', array('attributes' => array('class' => 'opentok-snapshot-publisher')));
 }
+/*
+function opentok_trigger_info() {
+	return array(
+		'opentok' => array(
+			'opentok_insert' => array(
+        		'label' => t('A trigger is fired when a conference room is created'),
+      		),
+			'opentok_update' => array(
+        		'label' => t('A trigger is fired when a conference room is updated'),
+      		),
+    	)
+    );
+}
+*/
+
+function opentok_action_info() {
+  return array(
+    'opentok_invite_action' => array(
+      'type' => 'node', 
+      'label' => t('Invite participants'), 
+      'configurable' => FALSE, 
+      'triggers' => array('node_insert'),
+    ), 'opentok_update_action' => array(
+      'type' => 'node', 
+      'label' => t('Update info for participants'), 
+      'configurable' => FALSE, 
+      'triggers' => array('node_update'),
+    )
+  );	
+}
+
+function opentok_invite_action($node, $context=array()) {
+	if ($node->type == 'opentok_conference') {
+		global $user;
+		$participant_string = $node->opentok_participants[LANGUAGE_NONE][0]['value'];
+		$participant_uids = explode(",", $participant_string);
+		
+		// Getting the selected users as objects from the list of uids
+    	$participants = array();
+    	foreach ($participant_uids as $uid) {
+        	$participants[] = user_load($uid);
+    	}
+    
+    	// Creating the unordered html list of users
+		$usernameList = "<ul>";
+		foreach ($participants as $participant) {
+			$usernameList .= "<li>".$participant->name."</li>";
+		}
+		$usernameList .= "</ul>";
+		
+		// Creating coma separated list of user emails
+		$userEmails = "";
+		foreach ($participants as $participant) {
+			$userEmails .= $participant->mail.",";
+		}
+		$userEmails = substr_replace($userEmails, "", -1);		
+	
+		$topic = $node->title;
+		$date = $node->opentok_conference_date[LANGUAGE_NONE][0]['value'];
+		$time = $node->opentok_conference_time[LANGUAGE_NONE][0]['value'];
+		$opt_message = $node->body[LANGUAGE_NONE][0]['value'];
+		$conferenceUrl = url('node/' . $node->nid, array('absolute' => TRUE));
+  		
+		global $base_root;
+		// getting the pure domain name
+		$domain_name = str_replace(array('http://','https://', 'http://www.', 'https://www.'), '', $base_root);
+		
+		$from = 'no-reply@'.$domain_name;
+		
+ 	  // are trying to send an HTML formatted email, please use
+  		// the HTMLMail Drupal module, rather than doing it yourself - it's
+  		// much more complicated than simply setting the content-type
+  		// in the header
+  		drupal_mail('opentok', 'invite', $userEmails, user_preferred_language($user), array('opt_message' => $opt_message, 'topic' => $topic, 'date' => $date, 'time' => $time, 'conferenceUrl' => $conferenceUrl), $from, TRUE);
+  		// You can check $message['result'] to see if the message sent successfully.
+    	drupal_set_message("You just invited".$usernameList."to a conference. The link to the conference room was sent to your email address.");
+	}
+}
+
+function opentok_mail($key, &$message, $params) {
+	global $user;
+	$topic = $params['topic'];
+	$date = $params['date'];
+	$time = $params['time'];
+	$opt_message = $params['opt_message'];
+	$conferenceUrl = $params['conferenceUrl'];
+	switch ($key) {
+		case 'invite':
+			$message['subject'] = "Qscience: Conference Invitation";
+			$message['body'][] = "Dear Sir/Madam,";
+			$message['body'][] = "You have been invited to an online conference by ".$user->name." with a topic '".$topic."'. It will take place on ".$date.
+					" at ".$time.". The message from ".$user->name." follows:";
+			$message['body'][] = $opt_message;
+			$message['body'][] = "To join the conference, please follow the provided link below:";
+			$message['body'][] = "<a href='".$conferenceUrl."'>".$conferenceUrl."</a>";
+			$message['body'][] = "Best regards,";
+			$message['body'][] = "QScience team";	
+			break;
+		case 'update':
+			break;
+		case 'self-invite':
+			$selfMessage = "<p>You just invited</p>".$usernameList."<p>to a conference with a topic '".$topic."'. The link to the conference is:</p><a href='".$conferenceUrl."'>".$conferenceUrl."</a><p>Best regards, <br />QScience team</p>";
+			
+			break;
+		case 'self-update':
+			break;
+	}
+}
+
+function opentok_update_action($node, $context=array()) {
+	$whataver  = "asadsad";
+}
+
+// TODO the participants field is not automatically populated when integrated with user_list
